@@ -51,30 +51,35 @@ DA is our DataFrame Name. There are 8950 records and 18 variables in our DataFra
 `DA.describe()` is a method used to generate a statistical summary of the dataset, providing key metrics such as mean, standard deviation, and percentiles for numerical columns. This function is crucial for understanding the basic distribution and characteristics of the data before performing segmentation.
 
 
+### Checking if there are any Missing Values
+
+DA.isna().sum()
+
+![image](https://github.com/user-attachments/assets/c47a6fed-ad38-4372-ad3b-708c80b8436d)
+
+### Filling the missing value with median
+
+DA['CREDIT_LIMIT'] = DA.CREDIT_LIMIT.fillna(DA['CREDIT_LIMIT'].median())
+
+DA['MINIMUM_PAYMENTS'] = DA.MINIMUM_PAYMENTS.fillna(DA['MINIMUM_PAYMENTS'].median())
+
+![image](https://github.com/user-attachments/assets/707432cb-347d-40ea-89ad-2b4d3bc7089f)
+
+### Now copy the original DataFrame and drop the Cust_Id column as it will not give so much impact.
+
+DA_copy = DA_copy.drop(columns=['CUST_ID'])
+
+![image](https://github.com/user-attachments/assets/089bfb38-4ef4-4ae7-8a47-b87c13ed05b5)
 
 
+## Feature Engineering
+
+### Dimenasionality Reduction
+
+**PCA : Principle Component Analysis**
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Because y variable is not present so we cannot do correlational analysis to do feature engineering or Dimenasionality Reduction, here in unsupervised ML algorithms, PCA Principle Component Analysis is used.
 
 
 
