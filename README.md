@@ -81,85 +81,143 @@ DA_copy = DA_copy.drop(columns=['CUST_ID'])
 
 Because y variable is not present so we cannot do correlational analysis to do feature engineering or Dimenasionality Reduction, here in unsupervised ML algorithms, PCA Principle Component Analysis is used.
 
+pc = PCA(n_components = 17).fit(DA_copy_scaled)
+pc.explained_variance_
 
+- Initialization and Fit: We initialized the PCA model to reduce the dataset to 17 components and fit it to the standardized data.
 
+sum(pc.explained_variance_)
+pc.explained_variance_ /  sum(pc.explained_variance_)
+pc.explained_variance_ratio_
 
+- Explained Variance: We examined the variance explained by each principal component and the proportion of total variance they explain.
 
+var = np.round(np.cumsum(pc.explained_variance_ratio_) * 100, 2)
+pd.DataFrame({'Eigen_Values':pc.explained_variance_,
+                   'VAR':np.round(pc.explained_variance_ratio_*100,2),
+                     'CUM_VAR':var},index=range(1,18))
 
+- Cumulative Variance: We calculated the cumulative variance explained by the components to understand how many components capture a significant portion of the total variance.
 
+pc_final=PCA(n_components=6).fit(DA_copy_scaled)
+pc_final.explained_variance_
 
+- Component Selection: We selected 6 principal components based on cumulative variance and refitted the PCA model.
 
+reduced_cr=pc_final.transform(DA_copy_scaled)
+dimensions=pd.DataFrame(reduced_cr)
+dimensions.columns=['C1','C2','C3','C4','C5','C6']
 
+- Data Transformation: We transformed the data to the 6 principal components, creating a new DataFrame for these reduced dimensions.
 
 
+### Clusterings
 
+Clustering is a method in data analysis where similar items are grouped together into clusters. It helps find natural groupings or patterns in data without needing predefined labels. This technique is useful for organizing data, identifying similarities, and exploring underlying structures in datasets.
 
+km_4 = KMeans( n_clusters = 4, random_state = 123).fit( dimensions )
+km_5 = KMeans( n_clusters = 5, random_state = 123).fit( dimensions )
+km_6 = KMeans( n_clusters = 6, random_state = 123).fit( dimensions )
+km_7 = KMeans( n_clusters = 7, random_state = 123).fit( dimensions )
+km_8 = KMeans( n_clusters = 8, random_state = 123).fit( dimensions )
+km_9 = KMeans( n_clusters = 9, random_state = 123).fit( dimensions )
+km_10 = KMeans( n_clusters = 10, random_state = 123).fit( dimensions )
 
 
+- Initialized and fit KMeans clustering models with different numbers of clusters (from 3 to 10) on the reduced dimensions (dimensions DataFrame).
 
 
+DA_copy_scaled['cluster_3'] = km_3.labels_
+DA_copy_scaled['cluster_4'] = km_4.labels_
+DA_copy_scaled['cluster_5'] = km_5.labels_
+DA_copy_scaled['cluster_6'] = km_6.labels_
+DA_copy_scaled['cluster_7'] = km_7.labels_
+DA_copy_scaled['cluster_8'] = km_8.labels_
+DA_copy_scaled['cluster_9'] = km_9.labels_
+DA_copy_scaled['cluster_10'] = km_10.labels_
 
 
+- Saved cluster labels for all models (from 3 to 10 clusters) and appended them to the DA_copy_scaled DataFrame for further analysis.
 
+![image](https://github.com/user-attachments/assets/bf272d96-ec0c-41b5-8233-68bdbef60385)
 
 
+## Quantitative evaluation of number of clusters
 
+### 1. Analysis of the cluster size | Count method
 
+pd.Series(km_3.labels_).value_counts()
+pd.Series(km_3.labels_).value_counts()/sum(pd.Series(km_3.labels_).value_counts())
+pd.Series(km_4.labels_).value_counts()/sum(pd.Series(km_4.labels_).value_counts())
+pd.Series(km_5.labels_).value_counts()/sum(pd.Series(km_5.labels_).value_counts())
+pd.Series(km_6.labels_).value_counts()/sum(pd.Series(km_6.labels_).value_counts())
+pd.Series(km_7.labels_).value_counts()/sum(pd.Series(km_7.labels_).value_counts())
+pd.Series(km_8.labels_).value_counts()/sum(pd.Series(km_8.labels_).value_counts())
+pd.Series(km_9.labels_).value_counts()/sum(pd.Series(km_9.labels_).value_counts())
+pd.Series(km_10.labels_).value_counts()/sum(pd.Series(km_10.labels_).value_counts())
 
+- Each line calculates the number of data points assigned to each cluster by km, where km is one of the KMeans models.
 
+- Dividing by the total count provides the percentage distribution of data points across clusters.
 
+![image](https://github.com/user-attachments/assets/397a526d-c432-40bc-9bfe-29133e90b263)
 
+- Computes the sum of squared distances of samples to their closest cluster center.
 
+- Lower inertia values indicate tighter clusters, suggesting better-defined and more distinct clusters in the data.
 
+### 2. Elbow Analysis
 
+for num_clusters in cluster_range:
+    clusters = KMeans( num_clusters ).fit( dimensions )
+    cluster_errors.append( clusters.inertia_ )
+clusters_df = pd.DataFrame( { "num_clusters": cluster_range, "cluster_errors": cluster_errors } )
+clusters_df.head(5)
 
+- Automating the process of finding the optimal number of clusters for KMeans clustering using the elbow method. It calculates and plots the inertia values for different numbers of clusters, enabling data-driven decision-making on the appropriate K value for clustering the dimensions data.
 
+%matplotlib inline
+import matplotlib.pyplot as plt
+plt.figure(figsize=(12,6))
+plt.plot( clusters_df.num_clusters, clusters_df.cluster_errors, marker = "o" )
+plt.show()
 
+![image](https://github.com/user-attachments/assets/727b0633-607e-416b-973a-6411ea0d5ac7)
 
+DA_copy_scaled.cluster_5.value_counts()/sum(DA_copy_scaled.cluster_5.value_counts())
 
+![image](https://github.com/user-attachments/assets/b52d7392-f1f4-4998-8ffd-c9a85e25701d)
 
 
+### 3. Choosing number clusters using Silhouette Coefficient -- SC
 
 
+metrics.silhouette_score( dimensions, km_4.labels_ )
+k_range = range(3, 18)
+scores = []
+for k in k_range:
+    km = KMeans(n_clusters = k, random_state = 123)
+    km.fit( dimensions )
+    scores.append( metrics.silhouette_score(dimensions, km.labels_) )
 
 
+- This is used to assess the quality of clustering results using the Silhouette Coefficient across different numbers of clusters.
 
+- The Silhouette Coefficient helps in identifying the optimal number of clusters by indicating how well-separated the clusters are.
 
 
+plt.plot(k_range, scores, marker = "o")
+plt.xlabel('Number of clusters')
+plt.ylabel('Silhouette Coefficient')
+plt.grid(True)
 
+![image](https://github.com/user-attachments/assets/4c067c18-2080-429a-840a-ac4ded370a02)
 
+- The plotted graph (Number of clusters vs Silhouette Coefficient) visually identifies the K value that maximizes clustering performance for the given data
 
+## Segment Distribution
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![image](https://github.com/user-attachments/assets/bdca41e5-2f70-43a9-8dcd-d33a9d8d7e1c)
 
 
 
